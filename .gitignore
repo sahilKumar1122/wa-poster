@@ -1,0 +1,9 @@
+# WhatsApp login. Full access to the linked account. Never commit.
+auth/
+# Local data
+images/
+sent-log.jsonl
+messages.json
+schedules.json
+node_modules/
+.DS_Store

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"><title>WA Poster · Log in</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1ea;color:#1b1f23;font:14px/1.45 system-ui,sans-serif}
+form{background:#fff;border:1px solid #e5e1d8;border-radius:10px;padding:24px;width:min(340px,90vw);display:flex;flex-direction:column;gap:12px}
+h1{font-size:16px;margin:0}input,button{font:inherit;padding:8px 10px;border-radius:7px;border:1px solid #e5e1d8}
+button{background:#128c7e;color:#fff;border-color:#128c7e;cursor:pointer}#e{color:#c0392b;font-size:12px;min-height:16px}
+</style></head><body>
+<form id="f"><h1>WA Poster</h1><input id="p" type="password" placeholder="Password" autocomplete="current-password" autofocus required>
+<button>Log in</button><div id="e" role="alert"></div></form>
+<script>
+document.getElementById('f').onsubmit=async e=>{e.preventDefault();
+ const r=await fetch('/login',{method:'POST',body:JSON.stringify({password:document.getElementById('p').value})});
+ if(r.ok)location.href='/';else document.getElementById('e').textContent='Wrong password. Try again.';};
+</script></body></html>

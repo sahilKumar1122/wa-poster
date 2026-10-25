@@ -1,0 +1,26 @@
+{
+  "name": "wa-poster",
+  "version": "0.1.0",
+  "description": "Post one saved message to many WhatsApp communities you run, with preview, images and scheduling.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "pino": "^10.4.0",
+    "qrcode": "^1.5.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sahilKumar1122/wa-poster.git"
+  },
+  "homepage": "https://sahilkumar1122.github.io/wa-poster/",
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<title>WA Poster</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1b1f23;--mute:#6b7280;--line:#e5e1d8;--green:#128c7e;--bub:#d9fdd3;--chat:#efeae2;--bad:#c0392b;--ok:#1e8e3e;--warn:#b7791f}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--card)}
+header h1{font-size:16px;margin:0}.pill{padding:3px 10px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+.pill.connected{color:var(--ok);border-color:var(--ok)}.pill.qr,.pill.starting{color:var(--warn);border-color:var(--warn)}.pill.disconnected{color:var(--bad);border-color:var(--bad)}
+main{display:grid;grid-template-columns:300px 300px 1fr;gap:14px;padding:14px;height:calc(100vh - 54px)}
+@media(max-width:1000px){main{grid-template-columns:1fr;height:auto}}
+.col{background:var(--card);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col h2{font-size:13px;margin:0;padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.list{overflow:auto;flex:1}
+.item{padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+.item:hover{background:rgba(128,128,128,.08)}.item.sel{background:rgba(18,140,126,.14)}
+.item small{color:var(--mute);display:block}
+button,input,textarea,select{font:inherit;color:inherit}
+button{padding:6px 12px;border-radius:7px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+button.pri{background:var(--green);color:#fff;border-color:var(--green)}button:disabled{opacity:.5;cursor:not-allowed}
+button.sm{padding:2px 8px;font-size:12px}
+input[type=text],input[type=search],input[type=number],textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:transparent}
+.tools{padding:8px 12px;display:flex;gap:6px;border-bottom:1px solid var(--line)}
+.right{overflow:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+.chip.on{background:#008069;color:#fff;border-color:#008069}
+.phone{width:100%;max-width:440px;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid #cfd4d6;box-shadow:0 4px 18px rgba(0,0,0,.14);display:flex;flex-direction:column;height:min(640px,75vh);font-family:"Segoe UI",Helvetica,Arial,sans-serif}
+.ph{background:#008069;color:#fff;padding:10px 12px;display:flex;gap:10px;align-items:center}
+.av{width:38px;height:38px;border-radius:50%;background:#dfe5e7;color:#54656f;display:grid;place-items:center;font-size:18px;flex:none}
+.ph b{display:block;font-size:15px;line-height:1.25}.ph small{opacity:.85;font-size:12px}
+.pbody{flex:1;overflow:auto;background:#efeae2;padding:12px 10px}
+.day{margin:0 auto 10px;width:max-content;background:#fff;border-radius:7px;padding:3px 10px;font-size:12px;color:#54656f;box-shadow:0 1px 1px rgba(0,0,0,.1)}
+.bub{position:relative;background:#d9fdd3;color:#111b21;padding:6px 8px 4px 9px;border-radius:8px 0 8px 8px;max-width:92%;margin-left:auto;font-size:14.2px;line-height:1.4;white-space:pre-wrap;word-break:break-word;box-shadow:0 1px 1px rgba(11,20,26,.13)}
+.bub::after{content:"";position:absolute;top:0;right:-7px;border-left:8px solid #d9fdd3;border-bottom:10px solid transparent}
+.bub a{color:#027eb5;text-decoration:none}.bub code{font-family:ui-monospace,monospace}
+.bub.img{padding:3px;width:86%}.bub.img img{display:block;width:100%;border-radius:6px}.cap{padding:4px 6px 1px}
+.st.scheduled,.st.running{color:var(--warn);border-color:var(--warn)}.st.done{color:var(--ok);border-color:var(--ok)}.st.missed,.st.cancelled{color:var(--bad);border-color:var(--bad)}
+.sched{border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.sched .j{display:flex;gap:8px;align-items:center;font-size:12.5px}
+.thumb{height:40px;border-radius:6px;vertical-align:middle;border:1px solid var(--line)}
+.tm{float:right;margin:7px 0 0 12px;font-size:11px;color:#667781;white-space:nowrap}.tm i{color:#53bdeb;font-style:normal}
+.pft{background:#f0f2f5;color:#667781;font-size:12.5px;text-align:center;padding:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row label{display:flex;gap:6px;align-items:center}
+.st{font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line)}
+.st.sent,.st.dry-ok{color:var(--ok);border-color:var(--ok)}.st.failed{color:var(--bad);border-color:var(--bad)}.st.sending,.st.waiting{color:var(--warn);border-color:var(--warn)}
+#log{font:12px ui-monospace,monospace;max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+.warn{color:var(--warn);font-size:12px}
+.right>*{flex:none}#text{min-height:120px;resize:vertical}#log:empty{display:none}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);width:min(560px,92vw)}
+</style></head><body>
+<header><h1>WA Poster</h1><span id="pill" class="pill starting">starting…</span><span id="count" style="color:var(--mute)"></span>
+<span style="flex:1"></span><button id="qrBtn" class="sm" hidden>Show QR</button><a id="logout" href="/logout" hidden style="font-size:12px;color:var(--mute)">Log out</a></header>
+
+<main>
+ <section class="col"><h2>Messages <span><button class="sm" id="newMsg">+ New</button> <button class="sm" id="impMsg">Import CSV</button></span></h2>
+  <div class="list" id="msgs"></div></section>
+
+ <section class="col"><h2>Communities <span id="gsel" style="color:var(--mute);font-weight:400"></span></h2>
+  <div class="tools"><input type="search" id="gq" placeholder="Search…"><button class="sm" id="gall">All</button><button class="sm" id="gnone">None</button></div>
+  <div class="tools"><label><input type="checkbox" id="mani" checked> Manikanth communities only</label></div>
+  <div class="list" id="groups"></div></section>
+
+ <section class="col"><h2>Preview &amp; send</h2>
+  <div class="right">
+   <textarea id="text" rows="5" placeholder="Pick a message on the left, or type here. Edits here apply to this send only."></textarea>
+   <div class="row"><label class="chip" style="cursor:pointer">📷 Attach image<input type="file" id="img" accept="image/jpeg,image/png,image/webp" hidden></label><span id="imgthumb"></span></div>
+   <div class="row">
+     <label>Delay <input type="number" id="dmin" value="15" min="5" style="width:64px">–<input type="number" id="dmax" value="25" min="5" style="width:64px"> s</label>
+     <label><input type="checkbox" id="dry" checked> Dry run (don't really send)</label>
+     <label title="Swaps look-alike emojis and adds an invisible character so each group gets a slightly different copy"><input type="checkbox" id="vary" checked> Vary each copy slightly</label>
+   </div>
+   <div class="row"><button class="pri" id="go">Send</button><span class="warn" id="warn"></span></div>
+   <div class="sched"><div class="row"><b>Or schedule</b><input type="datetime-local" id="when" style="width:auto"><button id="sch" disabled>Schedule</button></div><div id="schedlist"></div><small style="color:var(--mute)">Fires automatically at that time while this app is running and the computer is awake. Uses the message, groups, image and options as set now.</small></div>
+   <div id="log"></div>
+   <div id="previews"></div>
+  </div></section>
+</main>
+
+<dialog id="dlg"><form method="dialog" id="dform"><h3 id="dtitle" style="margin-top:0"></h3><div id="dbody"></div>
+ <div class="row" style="margin-top:12px;justify-content:flex-end"><button value="cancel">Cancel</button><button class="pri" value="ok" id="dok">Save</button></div></form></dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+let S={status:'starting',groups:[],sending:false,qr:null}, messages=[], selMsg=null, selGroups=new Set(), rowState={};
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+// WhatsApp formatting -> HTML
+const wa=t=>{const u=[];t=t.replace(/https?:\/\/[^\s)]+/g,m=>'\u0001'+(u.push(m)-1)+'\u0002');return esc(t).replace(/```([\s\S]+?)```/g,'<code>$1</code>').replace(/\*([^*\n]+)\*/g,'<b>$1</b>').replace(/_([^_\n]+)_/g,'<i>$1</i>').replace(/~([^~\n]+)~/g,'<s>$1</s>').replace(/\u0001(\d+)\u0002/g,(_,i)=>`<a href="${esc(u[i])}" target="_blank">${esc(u[i])}</a>`)};
+
+const es=new EventSource('/api/events');
+es.onmessage=e=>{const d=JSON.parse(e.data);
+ if(d.type==='state'){S=d;renderAll();}
+ else if(d.type==='progress'){if(d.status!=='waiting')rowState[d.id]=d;logLine(d);renderGroups();renderPreviews();}
+ else if(d.type==='done'){logLine({name:'—',status:'finished'});}
+ else if(d.type==='error'){logLine({name:'ERROR',status:d.msg});}};
+function logLine(d){const l=$('#log');const t=new Date().toLocaleTimeString();
+ l.insertAdjacentHTML('beforeend',`<div>${t} · ${esc(d.name||'')} · ${esc(d.status)}${d.error?' · '+esc(d.error):''}</div>`);l.scrollTop=l.scrollHeight;}
+
+async function api(p,o){const r=await fetch(p,o);return r.json();}
+async function loadMsgs(){messages=await api('/api/messages');renderMsgs();}
+const saveMsgs=()=>api('/api/messages',{method:'POST',body:JSON.stringify(messages)});
+
+function renderAll(){
+ const p=$('#pill');p.className='pill '+S.status;p.textContent=S.status==='qr'?'scan QR':S.status;
+ $('#qrBtn').hidden=!S.qr;$('#logout').hidden=!S.auth;$('#count').textContent=S.groups.length?S.groups.length+' groups loaded':'';
+ if(S.status==='qr'&&S.qr)showQR();renderGroups();updateGo();renderSched();}
+function showQR(){$('#dtitle').textContent='Scan with WhatsApp → Linked devices';$('#dbody').innerHTML=`<img src="${S.qr}" style="display:block;margin:auto">`;$('#dok').hidden=true;if(!$('#dlg').open)$('#dlg').showModal();}
+$('#qrBtn').onclick=showQR;
+$('#dlg').addEventListener('close',()=>{$('#dok').hidden=false;});
+
+function renderMsgs(){
+ $('#msgs').innerHTML=messages.length?messages.map((m,i)=>`<div class="item ${selMsg===i?'sel':''}" data-i="${i}"><div style="flex:1"><b>${esc(m.title||'Untitled')}</b><small>${esc((m.text||'').slice(0,70))}</small></div><button class="sm" data-e="${i}">Edit</button></div>`).join(''):'<div class="item"><small>No messages. Click "+ New" or "Import CSV".</small></div>';
+ document.querySelectorAll('#msgs .item[data-i]').forEach(el=>el.onclick=e=>{
+  if(e.target.dataset.e!==undefined)return editMsg(+e.target.dataset.e);
+  selMsg=+el.dataset.i;$('#text').value=messages[selMsg].text;curImage=messages[selMsg].image||null;renderImg();renderMsgs();renderPreviews();updateGo();});}
+
+function renderGroups(){
+ const q=$('#gq').value.toLowerCase();
+ const gs=visible().filter(g=>g.name.toLowerCase().includes(q));
+ $('#groups').innerHTML=gs.length?gs.map(g=>{const r=rowState[g.id];
+  return `<div class="item ${selGroups.has(g.id)?'sel':''}" data-g="${g.id}"><input type="checkbox" ${selGroups.has(g.id)?'checked':''}><div style="flex:1"><b>${esc(g.name)}</b><small>${g.size} members${g.isCommunity?' · community':''}${g.isAnnounce?' · announce-only':''}</small></div>${r?`<span class="st ${r.status}">${r.status}</span>`:''}</div>`}).join(''):'<div class="item"><small>No groups yet. Connect WhatsApp first.</small></div>';
+ document.querySelectorAll('#groups .item[data-g]').forEach(el=>el.onclick=()=>{const id=el.dataset.g;selGroups.has(id)?selGroups.delete(id):selGroups.add(id);renderGroups();renderPreviews();updateGo();});
+ $('#gsel').textContent=selGroups.size+' selected';}
+$('#gq').oninput=renderGroups;
+// Manikanth list = announce-only groups of the Mani masterclass communities
+const isMani=g=>g.isAnnounce&&/Trading Masterclass with Mani|Framework & Proven Trading/i.test(g.name);
+// sort by leading "<day> <month>" in the name, latest first; undated names go last
+const MON='jan feb mar apr may jun jul aug sep oct nov dec'.split(' ');
+const dkey=n=>{const m=n.match(/^(\d{1,2})\s+([A-Za-z]{3})/);const mi=m?MON.indexOf(m[2].toLowerCase()):-1;return mi<0?-1:mi*100+ +m[1];};
+const visible=()=>(($('#mani').checked?S.groups.filter(isMani):S.groups).slice().sort((a,b)=>(dkey(a.name)<0)-(dkey(b.name)<0)||dkey(a.name)-dkey(b.name)||a.name.localeCompare(b.name)));
+$('#mani').onchange=()=>{selGroups.forEach(id=>{if(!visible().some(g=>g.id===id))selGroups.delete(id)});renderGroups();renderPreviews();updateGo();};
+$('#gall').onclick=()=>{visible().filter(g=>g.name.toLowerCase().includes($('#gq').value.toLowerCase())).forEach(g=>selGroups.add(g.id));renderGroups();renderPreviews();updateGo();};
+$('#gnone').onclick=()=>{selGroups.clear();renderGroups();renderPreviews();updateGo();};
+
+let pv=null;
+function renderPreviews(){
+ const t=$('#text').value;const sel=visible().filter(g=>selGroups.has(g.id));
+ if(!t.trim()||!sel.length){$('#previews').innerHTML='<div style="color:var(--mute)">Preview appears here once a message and at least one community are selected.</div>';return;}
+ if(!sel.some(g=>g.id===pv))pv=sel[0].id;
+ const g=sel.find(x=>x.id===pv),r=rowState[g.id];
+ const time=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+ $('#previews').innerHTML=`<div class="chips">${sel.map(x=>`<span class="chip ${x.id===pv?'on':''}" data-p="${x.id}">${esc(x.name.split(/[:|]/)[0].trim())}${rowState[x.id]?' · '+rowState[x.id].status:''}</span>`).join('')}</div>
+ <div class="phone"><div class="ph"><div class="av">${g.isAnnounce?'📢':'👥'}</div><div style="min-width:0"><b>${esc(g.name)}</b><small>${g.size} members${r?' · '+r.status+(r.error?': '+esc(r.error):''):''}</small></div></div>
+ <div class="pbody"><div class="day">TODAY</div><div class="bub ${curImage?'img':''}">${curImage?`<img src="/images/${curImage}">`:''}<div class="cap">${wa(t)}<span class="tm">${time} <i>✓✓</i></span></div></div></div>
+ <div class="pft">${g.isAnnounce?'Only admins can send messages':'Type a message'}</div></div>`;
+ document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{pv=c.dataset.p;renderPreviews();});}
+$('#text').oninput=()=>{renderPreviews();updateGo();};
+
+function updateGo(){const ok=$('#text').value.trim()&&selGroups.size&&!S.sending;$('#go').disabled=!ok;$('#sch').disabled=!($('#text').value.trim()&&selGroups.size&&$('#when').value);
+ $('#go').textContent=S.sending?'Sending…':($('#dry').checked?'Dry run':'Send')+` to ${selGroups.size} group${selGroups.size===1?'':'s'}`;
+ $('#warn').textContent=(!$('#dry').checked&&S.status!=='connected')?'WhatsApp not connected':'';}
+$('#dry').onchange=updateGo;
+const fmt=t=>new Date(t).toLocaleString([],{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+function renderSched(){const L=(S.schedules||[]).slice().sort((a,b)=>a.runAt<b.runAt?-1:1).slice(-8);
+ $('#schedlist').innerHTML=L.map(j=>`<div class="j"><span class="st ${j.status}">${j.status}</span><span style="flex:1"><b>${fmt(j.runAt)}</b> · ${esc(j.label)} · ${j.groupIds.length} groups${j.dryRun?' · dry':''}${j.image?' · 📷':''}</span>${j.status==='scheduled'?`<button class="sm" data-c="${j.id}">Cancel</button>`:''}</div>`).join('');
+ document.querySelectorAll('[data-c]').forEach(b=>b.onclick=async()=>{const r=await api('/api/schedules/cancel',{method:'POST',body:JSON.stringify({id:b.dataset.c})});if(r.error)alert(r.error);});}
+$('#when').oninput=updateGo;
+$('#sch').onclick=async()=>{const n=selGroups.size,dry=$('#dry').checked,runAt=new Date($('#when').value);
+ if(!(runAt>new Date()))return alert('Pick a future time');
+ if(!dry&&!confirm(`Schedule a REAL send to ${n} group(s) at ${fmt(runAt)}? It will post automatically.`))return;
+ const r=await api('/api/schedules',{method:'POST',body:JSON.stringify({label:selMsg!=null?messages[selMsg].title:'',text:$('#text').value,groupIds:visible().filter(g=>selGroups.has(g.id)).map(g=>g.id),image:curImage,dryRun:dry,vary:$('#vary').checked,minDelay:+$('#dmin').value,maxDelay:+$('#dmax').value,runAt:runAt.toISOString()})});
+ if(r.error)alert(r.error);else $('#when').value='';updateGo();};
+
+$('#go').onclick=async()=>{
+ const n=selGroups.size,dry=$('#dry').checked;
+ if(!dry&&!confirm(`Really send to ${n} group(s)? This posts for real.`))return;
+ rowState={};$('#log').innerHTML='';renderGroups();
+ const r=await api('/api/send',{method:'POST',body:JSON.stringify({text:$('#text').value,groupIds:visible().filter(g=>selGroups.has(g.id)).map(g=>g.id),image:curImage,dryRun:dry,vary:$('#vary').checked,minDelay:+$('#dmin').value,maxDelay:+$('#dmax').value})});
+ if(r.error)alert(r.error);};
+
+// message editor
+function editMsg(i){
+ const m=i==null?{title:'',text:''}:messages[i];
+ $('#dtitle').textContent=i==null?'New message':'Edit message';
+ $('#dbody').innerHTML=`<input type="text" id="mt" placeholder="Title" value="${esc(m.title).replace(/"/g,'&quot;')}" style="margin-bottom:8px"><textarea id="mx" rows="9" placeholder="Message">${esc(m.text)}</textarea><div style="margin-top:8px"><input type="file" id="mimg" accept="image/jpeg,image/png,image/webp"> <span id="mthumb"></span></div>${i!=null?'<button type="button" class="sm" id="mdel" style="margin-top:8px;color:var(--bad)">Delete</button>':''}`;
+ let eimg=m.image||null;const showE=()=>{$('#mthumb').innerHTML=eimg?`<img class="thumb" src="/images/${eimg}"> <button type="button" class="sm" id="mrm">Remove</button>`:'';if(eimg)$('#mrm').onclick=()=>{eimg=null;showE();};};showE();
+ $('#mimg').onchange=async e=>{const f=e.target.files[0];if(!f)return;const r=await uploadImg(f);if(r)eimg=r;showE();};
+ $('#dlg').showModal();
+ if(i!=null)$('#mdel').onclick=()=>{messages.splice(i,1);selMsg=null;saveMsgs();renderMsgs();$('#dlg').close();};
+ $('#dform').onsubmit=e=>{if(e.submitter?.value!=='ok')return;const v={title:$('#mt').value,text:$('#mx').value};if(eimg)v.image=eimg;i==null?messages.push(v):messages[i]=v;saveMsgs();renderMsgs();};}
+$('#newMsg').onclick=()=>editMsg(null);
+
+// CSV import: header row with title/message columns, or single column = message
+function parseCSV(s){const rows=[];let r=[],f='',q=false;for(let i=0;i<s.length;i++){const c=s[i];
+ if(q){if(c==='"'&&s[i+1]==='"'){f+='"';i++}else if(c==='"')q=false;else f+=c}
+ else if(c==='"')q=true;else if(c===','){r.push(f);f=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&s[i+1]==='\n')i++;r.push(f);rows.push(r);r=[];f=''}else f+=c}
+ if(f||r.length){r.push(f);rows.push(r)}return rows.filter(r=>r.some(x=>x.trim()));}
+$('#impMsg').onclick=()=>{
+ $('#dtitle').textContent='Import messages from CSV';
+ $('#dbody').innerHTML=`<p style="margin-top:0;color:var(--mute)">In the sheet: File → Download → CSV. Choose it here, or paste CSV text. Columns containing "title"/"name" and "message"/"text" are used; otherwise the 1st column is the title and the 2nd the message.</p><input type="file" id="cf" accept=".csv" style="margin-bottom:8px"><textarea id="ct" rows="6" placeholder="…or paste CSV here"></textarea>`;
+ $('#cf').onchange=async e=>{$('#ct').value=await e.target.files[0].text();};
+ $('#dlg').showModal();
+ $('#dform').onsubmit=e=>{if(e.submitter?.value!=='ok')return;const rows=parseCSV($('#ct').value);if(!rows.length)return;
+  const h=rows[0].map(x=>x.toLowerCase());let ti=h.findIndex(x=>/title|name/.test(x)),mi=h.findIndex(x=>/message|text|template/.test(x));
+  let body=rows.slice(1);if(mi<0){ti=0;mi=rows[0].length>1?1:0;body=rows;if(rows[0].length===1)ti=-1}
+  messages.push(...body.map(r=>({title:ti>=0?r[ti]:(r[mi]||'').slice(0,30),text:r[mi]||''})).filter(m=>m.text.trim()));
+  saveMsgs();renderMsgs();};};
+
+let curImage=null;
+async function uploadImg(f){const ext=(f.name.split('.').pop()||'').toLowerCase();
+ const r=await api('/api/upload?ext='+ext,{method:'POST',body:f});if(r.error){alert(r.error);return null;}return r.file;}
+function renderImg(){$('#imgthumb').innerHTML=curImage?`<img class="thumb" src="/images/${curImage}"> <button class="sm" id="imgrm">Remove</button>`:'';
+ if(curImage)$('#imgrm').onclick=()=>{curImage=null;renderImg();renderPreviews();};renderPreviews();}
+$('#img').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const r=await uploadImg(f);if(r){curImage=r;renderImg();}};
+loadMsgs();renderPreviews();updateGo();
+</script></body></html>

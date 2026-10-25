@@ -1,0 +1,6 @@
+[
+  { "title": "Reminder · 1 day before", "text": "📣 *Live session tomorrow*\n\nWe start at 11:00 AM. Join from 10:50 AM.\n\n🔗 https://example.com/join" },
+  { "title": "Reminder · 2 hours before", "text": "⏰ *2 hours to go*\n\nToday's session starts at 11:00 AM.\n\n🔗 https://example.com/join\n\n💻 A laptop or big screen works best." },
+  { "title": "Live now", "text": "🔴 *We're live!*\n\nThe session is happening now.\n\n👉 https://example.com/join" },
+  { "title": "After the session", "text": "Thanks for joining today. Reply with the topic you want next." }
+]
