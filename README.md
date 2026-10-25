@@ -34,7 +34,8 @@ Open http://localhost:3000, scan the QR code (WhatsApp, Linked devices, Link a d
 Options:
 
 ```bash
-WA_POSTER_PASSWORD='a-long-password' npm start   # require a login
+WA_POSTER_PASSWORD='a-long-password' npm start   # require a password
+WA_POSTER_EMAIL='you@example.com' WA_POSTER_PASSWORD='a-long-password' npm start   # email + password
 caffeinate -i npm start                          # macOS: stay awake for scheduled sends
 ```
 

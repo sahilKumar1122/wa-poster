@@ -18,10 +18,11 @@ const IMG_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', web
 
 let jobs = fs.existsSync(SCHED_FILE) ? JSON.parse(fs.readFileSync(SCHED_FILE, 'utf8')) : [];
 for (const j of jobs) if (j.status === 'running') j.status = 'missed'; // server died mid-run
-// Optional login: set WA_POSTER_PASSWORD to require it. Unset = no login (server only listens on 127.0.0.1).
+// Optional login: set WA_POSTER_PASSWORD (and optionally WA_POSTER_EMAIL) to require it. Unset = no login (server only listens on 127.0.0.1).
 const PASSWORD = process.env.WA_POSTER_PASSWORD || '';
+const EMAIL = (process.env.WA_POSTER_EMAIL || '').trim().toLowerCase();
 const sha = x => crypto.createHash('sha256').update(x).digest();
-const TOKEN = PASSWORD ? crypto.createHmac('sha256', PASSWORD).update('wa-poster-session-v1').digest('hex') : null;
+const TOKEN = PASSWORD ? crypto.createHmac('sha256', PASSWORD).update('wa-poster-session-v1|' + EMAIL).digest('hex') : null;
 const safeEq = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
 const loggedIn = req => !TOKEN || (req.headers.cookie || '').split(/;\s*/).some(c => c.startsWith('wa_session=') && safeEq(c.slice(11), TOKEN));
 const state = { status: 'starting', qr: null, groups: [], sending: false, events: [] };
@@ -129,14 +130,15 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/login') {
     if (!TOKEN) { res.writeHead(302, { location: '/' }); return res.end(); }
     if (req.method === 'POST') {
-      const { password = '' } = await readJson(req);
-      if (safeEq(String(password), PASSWORD)) {
+      const { password = '', email = '' } = await readJson(req);
+      const okPass = safeEq(String(password), PASSWORD), okMail = !EMAIL || safeEq(String(email).trim().toLowerCase(), EMAIL);
+      if (okPass && okMail) {
         res.writeHead(200, { 'content-type': 'application/json', 'set-cookie': `wa_session=${TOKEN}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000` });
         return res.end('{"ok":true}');
       }
-      await sleep(1000); return send(res, 401, { error: 'wrong password' });
+      await sleep(1000); return send(res, 401, { error: 'wrong email or password' });
     }
-    res.writeHead(200, { 'content-type': 'text/html' }); return res.end(fs.readFileSync(path.join(DIR, 'login.html')));
+    res.writeHead(200, { 'content-type': 'text/html' }); return res.end(fs.readFileSync(path.join(DIR, 'login.html'), 'utf8').replace('__EMAIL__', String(!!EMAIL)));
   }
   if (url.pathname === '/logout') { res.writeHead(302, { location: '/login', 'set-cookie': 'wa_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' }); return res.end(); }
   if (!loggedIn(req)) {
