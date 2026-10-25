@@ -14,5 +14,5 @@ button{background:#128c7e;color:#fff;border-color:#128c7e;cursor:pointer}#e{colo
 const NEED_EMAIL=__EMAIL__;const em=document.getElementById('em');em.hidden=!NEED_EMAIL;em.required=NEED_EMAIL;if(NEED_EMAIL)em.focus();
 document.getElementById('f').onsubmit=async e=>{e.preventDefault();
  const r=await fetch('/login',{method:'POST',body:JSON.stringify({email:em.value,password:document.getElementById('p').value})});
- if(r.ok)location.href='/';else document.getElementById('e').textContent='Wrong email or password. Try again.';};
+ if(r.ok)location.href='/';else document.getElementById('e').textContent=((await r.json()).error||'Login failed')+'.';};
 </script></body></html>
