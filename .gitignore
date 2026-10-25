@@ -7,3 +7,5 @@ messages.json
 schedules.json
 node_modules/
 .DS_Store
+*.bak
+server.log

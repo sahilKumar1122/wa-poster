@@ -8,22 +8,32 @@ import pino from 'pino';
 import makeWASocket, { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
-const PORT = 3000;
-const MSG_FILE = path.join(DIR, 'messages.json');
-const LOG_FILE = path.join(DIR, 'sent-log.jsonl');
-const SCHED_FILE = path.join(DIR, 'schedules.json');
-const IMG_DIR = path.join(DIR, 'images');
+const PORT = +process.env.PORT || 3000;
+const HOST = process.env.HOST || '127.0.0.1';
+const DATA = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : DIR; // WhatsApp login + your data; mount a volume here when hosting
+fs.mkdirSync(DATA, { recursive: true });
+const MSG_FILE = path.join(DATA, 'messages.json');
+const LOG_FILE = path.join(DATA, 'sent-log.jsonl');
+const SCHED_FILE = path.join(DATA, 'schedules.json');
+const IMG_DIR = path.join(DATA, 'images');
 fs.mkdirSync(IMG_DIR, { recursive: true });
 const IMG_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' };
 
 let jobs = fs.existsSync(SCHED_FILE) ? JSON.parse(fs.readFileSync(SCHED_FILE, 'utf8')) : [];
 for (const j of jobs) if (j.status === 'running') j.status = 'missed'; // server died mid-run
-// Optional login: set WA_POSTER_PASSWORD to require it. Unset = no login (server only listens on 127.0.0.1).
+// Optional login: set WA_POSTER_PASSWORD (and optionally WA_POSTER_EMAIL) to require it. Unset = no login (server only listens on 127.0.0.1).
 const PASSWORD = process.env.WA_POSTER_PASSWORD || '';
+const EMAIL = (process.env.WA_POSTER_EMAIL || '').trim().toLowerCase();
 const sha = x => crypto.createHash('sha256').update(x).digest();
-const TOKEN = PASSWORD ? crypto.createHmac('sha256', PASSWORD).update('wa-poster-session-v1').digest('hex') : null;
+const TOKEN = PASSWORD ? crypto.createHmac('sha256', PASSWORD).update('wa-poster-session-v1|' + EMAIL).digest('hex') : null;
 const safeEq = (a, b) => crypto.timingSafeEqual(sha(a), sha(b));
 const loggedIn = req => !TOKEN || (req.headers.cookie || '').split(/;\s*/).some(c => c.startsWith('wa_session=') && safeEq(c.slice(11), TOKEN));
+if (!['127.0.0.1', 'localhost', '::1'].includes(HOST) && !PASSWORD) {
+  console.error('Refusing to listen on a public address without WA_POSTER_PASSWORD set.'); process.exit(1);
+}
+const COOKIE_FLAGS = `HttpOnly; SameSite=Strict; Path=/${process.env.COOKIE_SECURE === '1' ? '; Secure' : ''}`;
+const fails = new Map(); // ip -> { n, t }: 5 wrong logins per 10 min, then 429
+const clientIp = req => (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 const state = { status: 'starting', qr: null, groups: [], sending: false, events: [] };
 const clients = new Set();
 let sock;
@@ -46,7 +56,7 @@ async function loadGroups() {
 }
 
 async function connect() {
-  const { state: auth, saveCreds } = await useMultiFileAuthState(path.join(DIR, 'auth'));
+  const { state: auth, saveCreds } = await useMultiFileAuthState(path.join(DATA, 'auth'));
   const { version } = await fetchLatestBaileysVersion();
   sock = makeWASocket({ version, auth, logger: pino({ level: 'silent' }), browser: ['Mac OS', 'Chrome', '120'], syncFullHistory: false });
   sock.ev.on('creds.update', saveCreds);
@@ -60,7 +70,7 @@ async function connect() {
     if (connection === 'close') {
       const code = lastDisconnect?.error?.output?.statusCode;
       state.status = 'disconnected'; state.groups = []; pushState();
-      if (code === DisconnectReason.loggedOut) { fs.rmSync(path.join(DIR, 'auth'), { recursive: true, force: true }); }
+      if (code === DisconnectReason.loggedOut) { fs.rmSync(path.join(DATA, 'auth'), { recursive: true, force: true }); }
       setTimeout(connect, 2000);
     }
   });
@@ -129,16 +139,22 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/login') {
     if (!TOKEN) { res.writeHead(302, { location: '/' }); return res.end(); }
     if (req.method === 'POST') {
-      const { password = '' } = await readJson(req);
-      if (safeEq(String(password), PASSWORD)) {
-        res.writeHead(200, { 'content-type': 'application/json', 'set-cookie': `wa_session=${TOKEN}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000` });
+      const ip = clientIp(req), f = fails.get(ip);
+      if (f && Date.now() - f.t < 600000 && f.n >= 5) return send(res, 429, { error: 'too many attempts, try again in 10 minutes' });
+      const { password = '', email = '' } = await readJson(req);
+      const okPass = safeEq(String(password), PASSWORD), okMail = !EMAIL || safeEq(String(email).trim().toLowerCase(), EMAIL);
+      if (okPass && okMail) {
+        fails.delete(ip);
+        res.writeHead(200, { 'content-type': 'application/json', 'set-cookie': `wa_session=${TOKEN}; ${COOKIE_FLAGS}; Max-Age=2592000` });
         return res.end('{"ok":true}');
       }
-      await sleep(1000); return send(res, 401, { error: 'wrong password' });
+      const prev = fails.get(ip);
+      fails.set(ip, { n: prev && Date.now() - prev.t < 600000 ? prev.n + 1 : 1, t: Date.now() });
+      await sleep(1000); return send(res, 401, { error: 'wrong email or password' });
     }
-    res.writeHead(200, { 'content-type': 'text/html' }); return res.end(fs.readFileSync(path.join(DIR, 'login.html')));
+    res.writeHead(200, { 'content-type': 'text/html' }); return res.end(fs.readFileSync(path.join(DIR, 'login.html'), 'utf8').replace('__EMAIL__', String(!!EMAIL)));
   }
-  if (url.pathname === '/logout') { res.writeHead(302, { location: '/login', 'set-cookie': 'wa_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' }); return res.end(); }
+  if (url.pathname === '/logout') { res.writeHead(302, { location: '/login', 'set-cookie': `wa_session=; ${COOKIE_FLAGS}; Max-Age=0` }); return res.end(); }
   if (!loggedIn(req)) {
     if (url.pathname === '/') { res.writeHead(302, { location: '/login' }); return res.end(); }
     return send(res, 401, { error: 'login required' });
@@ -198,7 +214,7 @@ http.createServer(async (req, res) => {
     return send(res, 200, { ok: true });
   }
   send(res, 404, { error: 'not found' });
-}).listen(PORT, '127.0.0.1', () => console.log(`WA Poster UI: http://localhost:${PORT}`));
+}).listen(PORT, HOST, () => console.log(`WA Poster UI: http://${HOST === '127.0.0.1' ? 'localhost' : HOST}:${PORT}`));
 
 // Fire due jobs one at a time. A job more than 20 min overdue (server was off/offline) is marked missed, never sent late.
 setInterval(() => {

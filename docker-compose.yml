@@ -1,0 +1,27 @@
+# App + automatic HTTPS. Set in a .env file next to this one:
+#   DOMAIN=1.2.3.4.sslip.io   (or your own domain pointing at this server)
+#   WA_POSTER_PASSWORD=...    (required)
+#   WA_POSTER_EMAIL=...       (optional)
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      WA_POSTER_PASSWORD: ${WA_POSTER_PASSWORD:?set WA_POSTER_PASSWORD}
+      WA_POSTER_EMAIL: ${WA_POSTER_EMAIL:-}
+      COOKIE_SECURE: "1"
+    volumes:
+      - data:/data
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN}
+    command: caddy reverse-proxy --from ${DOMAIN} --to app:3000
+    volumes:
+      - caddy:/data
+    depends_on: [app]
+volumes:
+  data:
+  caddy:

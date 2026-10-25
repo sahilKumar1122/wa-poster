@@ -7,10 +7,12 @@ form{background:#fff;border:1px solid #e5e1d8;border-radius:10px;padding:24px;wi
 h1{font-size:16px;margin:0}input,button{font:inherit;padding:8px 10px;border-radius:7px;border:1px solid #e5e1d8}
 button{background:#128c7e;color:#fff;border-color:#128c7e;cursor:pointer}#e{color:#c0392b;font-size:12px;min-height:16px}
 </style></head><body>
-<form id="f"><h1>WA Poster</h1><input id="p" type="password" placeholder="Password" autocomplete="current-password" autofocus required>
+<form id="f"><h1>WA Poster</h1><input id="em" type="email" placeholder="Email" autocomplete="username" hidden>
+<input id="p" type="password" placeholder="Password" autocomplete="current-password" autofocus required>
 <button>Log in</button><div id="e" role="alert"></div></form>
 <script>
+const NEED_EMAIL=__EMAIL__;const em=document.getElementById('em');em.hidden=!NEED_EMAIL;em.required=NEED_EMAIL;if(NEED_EMAIL)em.focus();
 document.getElementById('f').onsubmit=async e=>{e.preventDefault();
- const r=await fetch('/login',{method:'POST',body:JSON.stringify({password:document.getElementById('p').value})});
- if(r.ok)location.href='/';else document.getElementById('e').textContent='Wrong password. Try again.';};
+ const r=await fetch('/login',{method:'POST',body:JSON.stringify({email:em.value,password:document.getElementById('p').value})});
+ if(r.ok)location.href='/';else document.getElementById('e').textContent=((await r.json()).error||'Login failed')+'.';};
 </script></body></html>

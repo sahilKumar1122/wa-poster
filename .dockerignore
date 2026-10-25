@@ -1,0 +1,10 @@
+node_modules
+auth
+images
+docs
+*.bak
+*.log
+sent-log.jsonl
+messages.json
+schedules.json
+.git
